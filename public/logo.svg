@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="masume-logo-title">
+  <title id="masume-logo-title">masume - 交差するマス目のロゴ</title>
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="8" width="48" height="48" rx="7"/>
+    <path d="M24 8v48"/>
+    <path d="M40 8v48"/>
+    <path d="M8 24h48"/>
+    <path d="M8 40h48"/>
+  </g>
+  <rect x="24" y="24" width="16" height="16" fill="var(--logo-accent, #0f766e)" stroke="none" rx="2"/>
+</svg>
