@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true">
+  <style>
+    .ink { stroke: #20282b; }
+    @media (prefers-color-scheme: dark) {
+      .ink { stroke: #e5eaec; }
+    }
+  </style>
+  <g class="ink" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="8" width="48" height="48" rx="7"/>
+    <path d="M24 8v48"/>
+    <path d="M40 8v48"/>
+    <path d="M8 24h48"/>
+    <path d="M8 40h48"/>
+  </g>
+  <rect x="24" y="24" width="16" height="16" fill="#14a399" stroke="none" rx="2"/>
+</svg>
