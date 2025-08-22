@@ -1,8 +1,23 @@
 import './style.css';
-import { generate, grade, normalizeCell, words } from './lib';
+import {
+  DEFAULT_SIZE,
+  firstEmptyCell,
+  formatHash,
+  generate,
+  grade,
+  normalizeCell,
+  parseHash,
+  words,
+} from './lib';
 import type { Dir, Placement, Puzzle } from './lib';
 
 const STORE_KEY = 'masume:state';
+const SIZE_KEY = 'masume:size';
+const SIZES: { key: number; label: string }[] = [
+  { key: 9, label: '小' },
+  { key: 11, label: '中' },
+  { key: 13, label: '大' },
+];
 
 const LOGO_SVG = `<svg viewBox="0 0 64 64" role="img" aria-label="masumeのロゴ" class="logo">
   <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -37,9 +52,14 @@ app.innerHTML = `
       <div class="toolbar">
         <button type="button" id="btn-new" class="primary">新しい問題</button>
         <button type="button" id="btn-check">採点する</button>
+        <button type="button" id="btn-hint-one">1文字ヒント</button>
         <button type="button" id="btn-reveal">答えを見る</button>
         <span class="spacer"></span>
-        <span class="seed-label" id="seed-label"></span>
+        <div class="size-pick" id="size-pick" role="group" aria-label="盤面の大きさ"></div>
+        <span class="seed-row">
+          <span class="seed-label" id="seed-label"></span>
+          <button type="button" class="link-btn" id="btn-copy">リンクをコピー</button>
+        </span>
       </div>
       <div class="board-wrap">
         <div class="board" id="board" role="grid" aria-label="クロスワードの盤面"></div>
@@ -69,31 +89,40 @@ const cluesAcross = mustFind<HTMLOListElement>('#clues-across');
 const cluesDown = mustFind<HTMLOListElement>('#clues-down');
 const btnNew = mustFind<HTMLButtonElement>('#btn-new');
 const btnCheck = mustFind<HTMLButtonElement>('#btn-check');
+const btnHintOne = mustFind<HTMLButtonElement>('#btn-hint-one');
 const btnReveal = mustFind<HTMLButtonElement>('#btn-reveal');
+const btnCopy = mustFind<HTMLButtonElement>('#btn-copy');
+const sizePick = mustFind<HTMLDivElement>('#size-pick');
 
 let puzzle: Puzzle;
 let entries: string[][] = [];
 let activeDir: Dir = 'across';
 let inputs: (HTMLInputElement | null)[][] = [];
-
-function seedFromHash(): number | null {
-  const m = /^#p=(\d{1,9})$/.exec(location.hash);
-  return m && m[1] !== undefined ? Number(m[1]) : null;
-}
+let size = DEFAULT_SIZE;
 
 function randomSeed(): number {
   return Math.floor(Math.random() * 1_000_000) + 1;
 }
 
+function loadSize(): number {
+  try {
+    const v = Number(localStorage.getItem(SIZE_KEY));
+    if (SIZES.some((s) => s.key === v)) return v;
+  } catch {
+    // 取れなければ既定
+  }
+  return DEFAULT_SIZE;
+}
+
 function persist(): void {
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({ seed: puzzle.seed, entries }));
+    localStorage.setItem(STORE_KEY, JSON.stringify({ seed: puzzle.seed, size, entries }));
   } catch {
     // 保存できなくても遊べる
   }
 }
 
-function restoreEntries(seed: number): string[][] | null {
+function restoreEntries(seed: number, sz: number): string[][] | null {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw === null) return null;
@@ -102,6 +131,7 @@ function restoreEntries(seed: number): string[][] | null {
       typeof parsed === 'object' &&
       parsed !== null &&
       (parsed as { seed?: unknown }).seed === seed &&
+      (parsed as { size?: unknown }).size === sz &&
       Array.isArray((parsed as { entries?: unknown }).entries)
     ) {
       return (parsed as { entries: string[][] }).entries;
@@ -279,19 +309,46 @@ function renderStatus(extra = ''): void {
   }
 }
 
-function loadPuzzle(seed: number): void {
-  puzzle = generate(words, seed);
-  const restored = restoreEntries(seed);
+function renderSize(): void {
+  sizePick.textContent = '';
+  const lead = document.createElement('span');
+  lead.className = 'size-lead kicker';
+  lead.textContent = '大きさ';
+  sizePick.append(lead);
+  for (const s of SIZES) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'diff-chip';
+    btn.setAttribute('aria-pressed', String(size === s.key));
+    btn.textContent = s.label;
+    btn.addEventListener('click', () => {
+      if (size === s.key) return;
+      loadPuzzle(randomSeed(), s.key);
+    });
+    sizePick.append(btn);
+  }
+}
+
+function loadPuzzle(seed: number, sz: number): void {
+  size = sz;
+  try {
+    localStorage.setItem(SIZE_KEY, String(sz));
+  } catch {
+    // 大きさを保存できなくても遊べる
+  }
+  puzzle = generate(words, seed, sz, sz - 1);
+  const restored = restoreEntries(seed, sz);
   entries =
     restored ?? Array.from({ length: puzzle.size }, () => Array(puzzle.size).fill('') as string[]);
-  history.replaceState(null, '', `#p=${seed}`);
+  history.replaceState(null, '', formatHash(seed, sz));
   seedLabel.textContent = `問題番号 ${seed}`;
+  renderSize();
   renderBoard();
   renderClues();
   renderStatus();
 }
 
-btnNew.addEventListener('click', () => loadPuzzle(randomSeed()));
+btnNew.addEventListener('click', () => loadPuzzle(randomSeed(), size));
 
 btnCheck.addEventListener('click', () => {
   clearMarks();
@@ -302,6 +359,20 @@ btnCheck.addEventListener('click', () => {
   renderStatus(`正解 ${result.correct}/${result.total}・誤り ${result.wrong.length}`);
 });
 
+btnHintOne.addEventListener('click', () => {
+  const cell = firstEmptyCell(puzzle, entries);
+  if (!cell) {
+    renderStatus('空きマスはもうない');
+    return;
+  }
+  const line = entries[cell.row];
+  if (line) line[cell.col] = puzzle.solution[cell.row]?.[cell.col] ?? '';
+  persist();
+  clearMarks();
+  renderBoard();
+  renderStatus('1文字あけた');
+});
+
 btnReveal.addEventListener('click', () => {
   entries = puzzle.solution.map((row) => row.map((cell) => cell ?? ''));
   persist();
@@ -309,9 +380,19 @@ btnReveal.addEventListener('click', () => {
   renderStatus('答えを表示した');
 });
 
-window.addEventListener('hashchange', () => {
-  const seed = seedFromHash();
-  if (seed !== null && seed !== puzzle.seed) loadPuzzle(seed);
+btnCopy.addEventListener('click', () => {
+  void navigator.clipboard?.writeText(location.href).then(
+    () => renderStatus('リンクをコピーした'),
+    () => renderStatus('コピーできなかった。URLを手で送って'),
+  );
 });
 
-loadPuzzle(seedFromHash() ?? randomSeed());
+window.addEventListener('hashchange', () => {
+  const route = parseHash(location.hash);
+  if (route && (route.seed !== puzzle.seed || route.size !== size)) {
+    loadPuzzle(route.seed, route.size);
+  }
+});
+
+const initial = parseHash(location.hash);
+loadPuzzle(initial?.seed ?? randomSeed(), initial ? initial.size : loadSize());
