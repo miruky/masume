@@ -1,32 +1,48 @@
+/*
+  masume — クロスワードの editorial デザイン。
+  カードと影を積まず、静かな中立色・青緑の一点・罫線と余白で構成する。
+  主役は盤面(方眼)とカギ。見出しは明朝。
+*/
+
 :root {
-  --bg: #f4f6f7;
-  --surface: #fdfefe;
-  --surface-2: #eceff1;
-  --ink: #20282b;
-  --muted: #64727a;
-  --line: #dbe2e6;
+  color-scheme: light dark;
+
+  --paper: #f3f5f6;
+  --surface: #fbfcfc;
+  --ink: #1f2629;
+  --ink-soft: #586065;
+  --ink-faint: #828a8f;
+  --rule: #dde2e5;
+  --rule-strong: #c8d0d4;
+  /* 青緑を一点アクセントに。-deepは小さな文字でもAAを満たす濃さ */
   --accent: #0f766e;
+  --accent-deep: #0b5e57;
   --accent-soft: rgba(15, 118, 110, 0.1);
-  --ng: #b8431f;
-  --block: #2c3a40;
-  --shadow: 0 1px 2px rgba(32, 40, 43, 0.05), 0 8px 24px rgba(32, 40, 43, 0.06);
-  --radius: 12px;
-  --font-serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  --ng: #a83c1b;
+  --block: #2a373c;
+
+  --serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  --sans: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --kicker-size: 11px;
+  --kicker-track: 0.22em;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #131819;
-    --surface: #1c2224;
-    --surface-2: #252d2f;
-    --ink: #e5eaec;
-    --muted: #93a3aa;
-    --line: #313c40;
+    --paper: #11181a;
+    --surface: #1a2123;
+    --ink: #e6eced;
+    --ink-soft: #9aa6ab;
+    --ink-faint: #78858a;
+    --rule: #293236;
+    --rule-strong: #3a454a;
     --accent: #4fd1c5;
-    --accent-soft: rgba(79, 209, 197, 0.13);
+    --accent-deep: #6fe0d5;
+    --accent-soft: rgba(79, 209, 197, 0.14);
     --ng: #e06a42;
-    --block: #0c1112;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --block: #0a1012;
   }
 }
 
@@ -40,30 +56,69 @@ html {
   color-scheme: light dark;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
-  font-family: 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
-  background: var(--bg);
+  font-family: var(--sans);
+  background: var(--paper);
   color: var(--ink);
   line-height: 1.7;
   min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.kicker {
+  font-size: var(--kicker-size);
+  font-weight: 600;
+  letter-spacing: var(--kicker-track);
+  color: var(--ink-faint);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:where(button, a, input):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 #app {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 32px 24px 24px;
+  padding: 0 28px 40px;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  gap: 24px;
 }
+
+/* ── ヘッダー ── */
 
 .site-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  animation: rise 0.5s ease both;
+  gap: 20px;
+  padding: 34px 0 20px;
+  border-bottom: 1px solid var(--rule);
+  animation: rise 0.5s var(--ease) both;
 }
 
 .brand {
@@ -73,69 +128,76 @@ body {
 }
 
 .logo {
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   color: var(--ink);
   flex-shrink: 0;
 }
 
 .brand h1 {
-  font-family: var(--font-serif);
-  font-size: 28px;
+  font-family: var(--serif);
+  font-size: 27px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
 }
 
 .tagline {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 4px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  margin-top: 3px;
+  max-width: 40ch;
 }
 
 .repo-link {
-  color: var(--muted);
+  color: var(--ink-soft);
   text-decoration: none;
-  font-size: 13px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 6px 16px;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  padding-bottom: 2px;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  transition: color 0.16s var(--ease);
 }
 
 .repo-link:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
   border-color: var(--accent);
-  transform: translateY(-1px);
 }
+
+/* ── レイアウト ── */
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.12fr) minmax(290px, 0.88fr);
+  gap: 0 52px;
   flex: 1;
   align-items: start;
-  animation: rise 0.5s ease 0.08s both;
+  padding-top: 36px;
+  animation: rise 0.5s var(--ease) 0.08s both;
 }
 
 .pane {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
+
+.clues-pane {
+  padding-left: 52px;
+  border-left: 1px solid var(--rule);
+}
+
+/* ── ツールバー ── */
 
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
+  gap: 18px;
   flex-wrap: wrap;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
 }
 
 .spacer {
@@ -143,48 +205,50 @@ body {
 }
 
 .seed-label {
-  color: var(--muted);
+  color: var(--ink-faint);
   font-size: 12px;
+  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
 
-button {
-  font: inherit;
+#btn-check,
+#btn-reveal {
+  position: relative;
   font-size: 13px;
-  color: var(--ink);
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px 14px;
-  cursor: pointer;
+  color: var(--ink-soft);
+  padding: 3px 0;
+  border-bottom: 1px solid transparent;
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.15s ease;
+    color 0.16s var(--ease),
+    border-color 0.16s var(--ease);
 }
 
-button:hover {
+#btn-check:hover,
+#btn-reveal:hover {
+  color: var(--accent-deep);
   border-color: var(--accent);
-  transform: translateY(-1px);
 }
 
 button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  font-size: 13px;
+  color: var(--accent-deep);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  padding: 6px 16px;
+  transition:
+    background 0.18s var(--ease),
+    color 0.18s var(--ease);
 }
 
 button.primary:hover {
-  filter: brightness(1.08);
+  background: var(--accent);
+  color: var(--paper);
 }
 
-:is(button, input):focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
+/* ── 盤面(方眼)── */
 
 .board-wrap {
-  padding: 16px;
+  padding: 8px 0 4px;
   display: flex;
   justify-content: center;
 }
@@ -192,22 +256,21 @@ button.primary:hover {
 .board {
   display: grid;
   grid-template-columns: repeat(var(--size, 11), minmax(0, 1fr));
-  gap: 2px;
-  width: min(100%, 480px);
+  gap: 1px;
+  width: min(100%, 500px);
   aspect-ratio: 1;
-  background: var(--line);
-  border: 2px solid var(--block);
-  border-radius: 6px;
-  overflow: hidden;
+  background: var(--rule-strong);
+  border: 1px solid var(--rule-strong);
 }
 
 .board.celebrate {
-  animation: pop 0.8s ease;
+  animation: pop 0.7s var(--ease);
 }
 
 .cell {
   position: relative;
   background: var(--surface);
+  transition: background 0.14s var(--ease);
 }
 
 .cell.block {
@@ -219,7 +282,7 @@ button.primary:hover {
 }
 
 .cell.wrong {
-  background: color-mix(in srgb, var(--ng) 18%, var(--surface));
+  background: color-mix(in srgb, var(--ng) 16%, var(--surface));
 }
 
 .cell .num {
@@ -227,10 +290,11 @@ button.primary:hover {
   top: 1px;
   left: 3px;
   font-size: 9px;
-  color: var(--muted);
+  color: var(--ink-faint);
   line-height: 1.2;
   pointer-events: none;
   z-index: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .cell input {
@@ -239,86 +303,89 @@ button.primary:hover {
   border: none;
   background: transparent;
   text-align: center;
-  font: inherit;
-  font-size: clamp(13px, 2.6vw, 20px);
+  font-family: var(--serif);
+  font-size: clamp(13px, 2.6vw, 21px);
   color: var(--ink);
   caret-color: var(--accent);
 }
 
+/* ── ステータス ── */
+
 .statusbar {
   display: flex;
-  gap: 16px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  gap: 22px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-faint);
   font-size: 12px;
+  letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
   flex-wrap: wrap;
 }
 
 .statusbar .msg {
-  color: var(--ink);
+  color: var(--ink-soft);
 }
 
 .statusbar .done {
-  color: var(--accent);
+  color: var(--accent-deep);
   font-weight: 600;
 }
 
-/* カギ */
+/* ── カギ ── */
 
 .clues-pane {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;
+  gap: 0 28px;
 }
 
 .clue-col {
-  padding: 16px;
   min-width: 0;
 }
 
-.clue-col + .clue-col {
-  border-left: 1px solid var(--line);
-}
-
 .clue-col h2 {
-  font-family: var(--font-serif);
+  font-family: var(--serif);
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  padding-bottom: 10px;
   margin-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
 }
 
 .clue-col ol {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  max-height: 520px;
+  max-height: 540px;
   overflow-y: auto;
 }
 
 .clue-item button {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: baseline;
   width: 100%;
   text-align: left;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 8px;
+  padding: 8px 4px 8px 10px;
+  border-left: 2px solid transparent;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
+  color: var(--ink);
+  transition:
+    color 0.14s var(--ease),
+    border-color 0.14s var(--ease);
 }
 
 .clue-item button:hover {
-  background: var(--surface-2);
-  transform: none;
+  color: var(--accent-deep);
 }
 
 .clue-item.active button {
-  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .clue-num {
@@ -333,24 +400,29 @@ button.primary:hover {
 }
 
 .clue-len {
-  color: var(--muted);
+  color: var(--ink-faint);
   font-size: 11px;
   white-space: nowrap;
 }
 
+/* ── フッター ── */
+
 .site-footer {
-  color: var(--muted);
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-faint);
   font-size: 12px;
   text-align: center;
-  padding: 8px 0;
 }
+
+/* ── モーション ── */
 
 @keyframes rise {
   from {
     opacity: 0;
     transform: translateY(8px);
   }
-
   to {
     opacity: 1;
     transform: none;
@@ -361,23 +433,36 @@ button.primary:hover {
   0% {
     transform: scale(1);
   }
-
   35% {
-    transform: scale(1.015);
+    transform: scale(1.012);
   }
-
   100% {
     transform: scale(1);
   }
 }
 
+/* ── レスポンシブ ── */
+
 @media (max-width: 880px) {
+  #app {
+    padding: 0 20px 36px;
+  }
+
   .layout {
     grid-template-columns: 1fr;
+    padding-top: 28px;
+  }
+
+  .clues-pane {
+    padding-left: 0;
+    border-left: none;
+    margin-top: 36px;
+    padding-top: 28px;
+    border-top: 1px solid var(--rule);
   }
 
   .clue-col ol {
-    max-height: 280px;
+    max-height: 300px;
   }
 }
 
