@@ -200,6 +200,24 @@ export interface GradeResult {
   complete: boolean;
 }
 
+/**
+ * まだ埋まっていない解答マスを左上から探す。1文字ヒントで開けるマスを選ぶのに使う。
+ * すべて埋まっていれば null。
+ */
+export function firstEmptyCell(
+  puzzle: Puzzle,
+  entries: readonly (readonly string[])[],
+): { row: number; col: number } | null {
+  for (let r = 0; r < puzzle.size; r++) {
+    for (let c = 0; c < puzzle.size; c++) {
+      const expected = puzzle.solution[r]?.[c];
+      if (expected === null || expected === undefined) continue;
+      if ((entries[r]?.[c] ?? '') === '') return { row: r, col: c };
+    }
+  }
+  return null;
+}
+
 /** 入力された盤面を解答と突き合わせる。空マスは誤りに数えない */
 export function grade(puzzle: Puzzle, entries: readonly (readonly string[])[]): GradeResult {
   let total = 0;
