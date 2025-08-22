@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { words } from './data/words';
-import { generate, grade } from './generator';
+import { firstEmptyCell, generate, grade } from './generator';
 import type { Puzzle } from './generator';
 
 function lettersOf(p: Puzzle, row: number, col: number, dir: 'across' | 'down', word: string) {
@@ -40,6 +40,20 @@ describe('generate', () => {
         const seen = byStart.get(key);
         if (seen !== undefined) expect(pl.number).toBe(seen);
         byStart.set(key, pl.number);
+      }
+    }
+  });
+
+  it('大きさを変えても盤面の不変条件が崩れない', () => {
+    for (const size of [9, 13]) {
+      for (let seed = 1; seed <= 8; seed++) {
+        const minWords = size - 2;
+        const p = generate(words, seed, size, minWords);
+        expect(p.size).toBe(size);
+        expect(p.placements.length).toBeGreaterThanOrEqual(minWords);
+        for (const pl of p.placements) {
+          expect(lettersOf(p, pl.row, pl.col, pl.dir, pl.word)).toEqual([...pl.word]);
+        }
       }
     }
   });
@@ -95,5 +109,25 @@ describe('grade', () => {
       expect(result.wrong).toEqual([{ row: target.r, col: target.c }]);
       expect(result.complete).toBe(false);
     }
+  });
+});
+
+describe('firstEmptyCell', () => {
+  it('左上から最初の空マスを返す', () => {
+    const p = generate(words, 5);
+    const empty = p.solution.map((row) => row.map(() => ''));
+    const cell = firstEmptyCell(p, empty);
+    expect(cell).not.toBeNull();
+    // 返ったマスは解答マス(黒マスでない)かつ空である
+    if (cell) {
+      expect(p.solution[cell.row]?.[cell.col]).not.toBeNull();
+      expect(empty[cell.row]?.[cell.col]).toBe('');
+    }
+  });
+
+  it('すべて埋まっていれば null', () => {
+    const p = generate(words, 5);
+    const full = p.solution.map((row) => row.map((cell) => cell ?? ''));
+    expect(firstEmptyCell(p, full)).toBeNull();
   });
 });
